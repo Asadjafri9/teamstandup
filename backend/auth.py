@@ -126,6 +126,42 @@ async def google_callback(code: str, request: Request):
     return response
 
 
+@router.get("/auth/demo")
+def demo_login():
+    """Demo login endpoint — creates a demo user and sets a session cookie."""
+    import sqlite3
+    from pathlib import Path
+    DB_PATH = Path(__file__).parent / "standupbot.db"
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+
+    try:
+        existing = conn.execute("SELECT * FROM users WHERE email = ?", ("demo@standupbot.dev",)).fetchone()
+        if existing:
+            user_id = existing["id"]
+        else:
+            cursor = conn.execute(
+                "INSERT INTO users (email, name, avatar_url) VALUES (?, ?, ?)",
+                ("demo@standupbot.dev", "Demo User", ""),
+            )
+            user_id = cursor.lastrowid
+            conn.commit()
+    finally:
+        conn.close()
+
+    token = serializer.dumps(user_id)
+    response = RedirectResponse(url="http://localhost:5173/dashboard")
+    response.set_cookie(
+        COOKIE_NAME,
+        token,
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+        domain="localhost",
+    )
+    return response
+
+
 @router.post("/auth/logout")
 def logout(response: Response):
     response.delete_cookie(

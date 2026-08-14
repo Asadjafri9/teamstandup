@@ -10,6 +10,10 @@ export function Hero() {
     window.location.href = "http://localhost:8000/auth/google";
   };
 
+  const handleDemoLogin = () => {
+    window.location.href = "http://localhost:8000/auth/demo";
+  };
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-[var(--line-strong)]">
@@ -84,7 +88,7 @@ export function Hero() {
             {/* Google Sign In Button */}
             <button
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 border-[var(--line-strong)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors mb-6"
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 border-[var(--line-strong)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors mb-3"
             >
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -93,6 +97,15 @@ export function Hero() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               <span className="font-semibold text-[var(--ink)]">Continue with Google</span>
+            </button>
+
+            {/* Demo Login Button */}
+            <button
+              onClick={handleDemoLogin}
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 border-[var(--persian)] bg-[var(--persian)] hover:opacity-90 transition-opacity text-white mb-6"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
+              <span className="font-semibold">Try Demo — no sign in needed</span>
             </button>
 
             <div className="relative mb-6">
