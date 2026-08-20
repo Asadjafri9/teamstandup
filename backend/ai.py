@@ -3,6 +3,7 @@ import json
 from datetime import date
 import httpx
 from dotenv import load_dotenv
+from db import get_db_connection, USE_POSTGRES, PLACEHOLDER
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
@@ -12,12 +13,7 @@ MODEL = "openai/gpt-3.5-turbo"
 
 
 async def generate_brief_stream(project: dict, submissions: list, active_members: list, db_param=None):
-    # Create a new database connection for this thread
-    import sqlite3
-    from pathlib import Path
-    DB_PATH = Path(__file__).parent / "standupbot.db"
-    db = sqlite3.connect(str(DB_PATH))
-    db.row_factory = sqlite3.Row
+    db = get_db_connection()
     
     deadline = project.get("deadline")
     if deadline:
@@ -127,7 +123,7 @@ Deadline: {project.get('deadline', 'N/A')} — {days_remaining} days remaining. 
                             continue
 
         cursor = db.execute(
-            "INSERT INTO briefs (project_id, date, content, submissions_count, total_active_members) VALUES (?, ?, ?, ?, ?)",
+            f"INSERT INTO briefs (project_id, date, content, submissions_count, total_active_members) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
             (project["id"], date.today(), full_content, len(submissions), len(active_members)),
         )
         db.commit()

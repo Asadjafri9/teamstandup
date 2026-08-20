@@ -13,6 +13,8 @@ if USE_POSTGRES:
 else:
     DB_PATH = Path(__file__).parent / "standupbot.db"
 
+PLACEHOLDER = "%s" if USE_POSTGRES else "?"
+
 
 def get_db():
     if USE_POSTGRES:

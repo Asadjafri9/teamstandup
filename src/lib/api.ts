@@ -1,6 +1,9 @@
 // API client for StandupBot backend
 
-const API_BASE = "http://localhost:8000";
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8001"
+    : "";
 
 class ApiError extends Error {
   constructor(

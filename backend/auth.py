@@ -4,14 +4,17 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature
-from db import get_db
+from db import get_db, get_db_connection, USE_POSTGRES
 
 router = APIRouter()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "standupbot-hackathon-secret-change-in-prod")
-REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
+REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8001/auth/google/callback")
+APP_URL = os.getenv("APP_URL", "http://localhost:8081")
+
+PLACEHOLDER = "%s" if USE_POSTGRES else "?"
 
 serializer = URLSafeTimedSerializer(SESSION_SECRET)
 
@@ -28,15 +31,10 @@ def get_current_user(request: Request):
     except BadSignature:
         return None
     
-    # Use a fresh database connection
-    import sqlite3
-    from pathlib import Path
-    DB_PATH = Path(__file__).parent / "standupbot.db"
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     
     try:
-        user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        user = conn.execute(f"SELECT * FROM users WHERE id = {PLACEHOLDER}", (user_id,)).fetchone()
         return dict(user) if user else None
     finally:
         conn.close()
@@ -70,42 +68,37 @@ async def google_callback(code: str, request: Request):
         token_resp = await _exchange_code(code)
         
         if "error" in token_resp:
-            return RedirectResponse(url="http://localhost:8080/?error=oauth_failed")
+            return RedirectResponse(url=f"{APP_URL}/?error=oauth_failed")
         
         if "access_token" not in token_resp:
             print(f"Token response: {token_resp}")
-            return RedirectResponse(url="http://localhost:8080/?error=no_access_token")
+            return RedirectResponse(url=f"{APP_URL}/?error=no_access_token")
         
         user_info = await _fetch_user_info(token_resp["access_token"])
     except Exception as e:
         print(f"OAuth error: {e}")
-        return RedirectResponse(url="http://localhost:8080/?error=oauth_exception")
+        return RedirectResponse(url=f"{APP_URL}/?error=oauth_exception")
 
-    # Use a fresh database connection
-    import sqlite3
-    from pathlib import Path
-    DB_PATH = Path(__file__).parent / "standupbot.db"
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     
     try:
-        existing = conn.execute("SELECT * FROM users WHERE email = ?", (user_info["email"],)).fetchone()
+        existing = conn.execute(f"SELECT * FROM users WHERE email = {PLACEHOLDER}", (user_info["email"],)).fetchone()
 
         if existing:
             user_id = existing["id"]
             conn.execute(
-                "UPDATE users SET name = ?, avatar_url = ? WHERE id = ?",
+                f"UPDATE users SET name = {PLACEHOLDER}, avatar_url = {PLACEHOLDER} WHERE id = {PLACEHOLDER}",
                 (user_info.get("name", ""), user_info.get("picture", ""), user_id),
             )
         else:
             cursor = conn.execute(
-                "INSERT INTO users (email, name, avatar_url) VALUES (?, ?, ?)",
+                f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
                 (user_info["email"], user_info.get("name", ""), user_info.get("picture", "")),
             )
             user_id = cursor.lastrowid
 
             conn.execute(
-                "UPDATE project_members SET user_id = ? WHERE email = ? AND user_id IS NULL",
+                f"UPDATE project_members SET user_id = {PLACEHOLDER} WHERE email = {PLACEHOLDER} AND user_id IS NULL",
                 (user_id, user_info["email"]),
             )
 
@@ -114,14 +107,14 @@ async def google_callback(code: str, request: Request):
         conn.close()
 
     token = serializer.dumps(user_id)
-    response = RedirectResponse(url="http://localhost:8080/dashboard")
+    response = RedirectResponse(url=f"{APP_URL}/dashboard")
     response.set_cookie(
         COOKIE_NAME, 
         token, 
         max_age=COOKIE_MAX_AGE, 
         httponly=True, 
         samesite="lax",
-        domain="localhost"
+        domain=os.getenv("COOKIE_DOMAIN", "localhost")
     )
     return response
 
@@ -129,19 +122,15 @@ async def google_callback(code: str, request: Request):
 @router.get("/auth/demo")
 def demo_login():
     """Demo login endpoint — creates a demo user and sets a session cookie."""
-    import sqlite3
-    from pathlib import Path
-    DB_PATH = Path(__file__).parent / "standupbot.db"
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
 
     try:
-        existing = conn.execute("SELECT * FROM users WHERE email = ?", ("demo@standupbot.dev",)).fetchone()
+        existing = conn.execute(f"SELECT * FROM users WHERE email = {PLACEHOLDER}", ("demo@standupbot.dev",)).fetchone()
         if existing:
             user_id = existing["id"]
         else:
             cursor = conn.execute(
-                "INSERT INTO users (email, name, avatar_url) VALUES (?, ?, ?)",
+                f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
                 ("demo@standupbot.dev", "Demo User", ""),
             )
             user_id = cursor.lastrowid
@@ -150,14 +139,14 @@ def demo_login():
         conn.close()
 
     token = serializer.dumps(user_id)
-    response = RedirectResponse(url="http://localhost:5173/dashboard")
+    response = RedirectResponse(url=f"{APP_URL}/dashboard")
     response.set_cookie(
         COOKIE_NAME,
         token,
         max_age=COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        domain="localhost",
+        domain=os.getenv("COOKIE_DOMAIN", "localhost"),
     )
     return response
 
@@ -166,7 +155,7 @@ def demo_login():
 def logout(response: Response):
     response.delete_cookie(
         COOKIE_NAME,
-        domain="localhost",
+        domain=os.getenv("COOKIE_DOMAIN", "localhost"),
         httponly=True,
         samesite="lax"
     )

@@ -1,14 +1,19 @@
 import { useState } from "react";
 
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8001"
+    : "";
+
 export function Nav() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/auth/google";
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
   const handleDemoLogin = () => {
-    window.location.href = "http://localhost:8000/auth/demo";
+    window.location.href = `${API_BASE}/auth/demo`;
   };
 
   return (

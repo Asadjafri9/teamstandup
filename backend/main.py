@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
-from db import init_db
+from db import init_db, get_db_connection, PLACEHOLDER
 from auth import router as auth_router
 from routes.projects import router as projects_router
 from routes.members import router as members_router, router_global as members_global_router
@@ -14,7 +14,15 @@ app = FastAPI(title="StandupBot", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:8000", "http://localhost:8080"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost:8001",
+        "http://localhost:8080",
+        "http://localhost:8081",
+        os.getenv("APP_URL", ""),
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,11 +52,11 @@ def get_pending_invites(request: Request):
     db = get_db_connection()
     try:
         invites = db.execute(
-            """
+            f"""
             SELECT pm.*, p.name as project_name 
             FROM project_members pm 
             JOIN projects p ON pm.project_id = p.id 
-            WHERE pm.user_id = ? AND pm.status = 'invited'
+            WHERE pm.user_id = {PLACEHOLDER} AND pm.status = 'invited'
             """,
             (user["id"],),
         ).fetchall()
