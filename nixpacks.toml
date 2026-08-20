@@ -3,7 +3,7 @@ nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
 cmds = [
-  "pip install --user -r backend/requirements.txt",
+  "pip install -r backend/requirements.txt",
   "npm install",
   "npm run build"
 ]
@@ -12,4 +12,4 @@ cmds = [
 cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "cd backend && PYTHONPATH=/root/.local/lib/python3.11/site-packages python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+cmd = "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
