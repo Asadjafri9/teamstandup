@@ -17,7 +17,11 @@ async def generate_brief_stream(project: dict, submissions: list, active_members
     
     deadline = project.get("deadline")
     if deadline:
-        days_remaining = (date.fromisoformat(deadline) - date.today()).days
+        if hasattr(deadline, 'isoformat'):
+            deadline_str = deadline.isoformat()
+        else:
+            deadline_str = str(deadline)
+        days_remaining = (date.fromisoformat(deadline_str) - date.today()).days
     else:
         days_remaining = -1
 
@@ -39,7 +43,7 @@ async def generate_brief_stream(project: dict, submissions: list, active_members
 
 Project: {project['name']}
 Description: {project.get('description', '') or 'N/A'}
-Deadline: {project.get('deadline', 'N/A')} ({days_remaining} days away)
+Deadline: {deadline_str if deadline else 'N/A'} ({days_remaining} days away)
 
 Active team members and their roles:
 {member_list}
@@ -68,7 +72,7 @@ Tomorrow's plan:
 
 [Missing member names] — no update submitted.
 
-Deadline: {project.get('deadline', 'N/A')} — {days_remaining} days remaining. Risk level: [Low/Medium/High]."""
+Deadline: {deadline_str if deadline else 'N/A'} — {days_remaining} days remaining. Risk level: [Low/Medium/High]."""
 
     user_prompt_parts = []
     for s in submissions:
