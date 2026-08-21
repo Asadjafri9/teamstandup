@@ -12,29 +12,4 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    build: {
-      cssCodeSplit: false,
-    },
-    plugins: [
-      {
-        name: "fix-vite7-css-post",
-        enforce: "pre",
-        configResolved(resolvedConfig) {
-          const plugins = resolvedConfig.plugins as any[];
-          const cssPost = plugins.find((p) => p.name === "vite:css-post");
-          if (cssPost && cssPost.renderChunk) {
-            const orig = cssPost.renderChunk;
-            cssPost.renderChunk = function (code, chunk, opts) {
-              try {
-                return orig.call(this, code, chunk, opts);
-              } catch (e) {
-                return { code: code || "/* empty */", map: null };
-              }
-            };
-          }
-        },
-      },
-    ],
-  },
 });
