@@ -6,7 +6,7 @@ import ssrServer from "./dist/server/server.js";
 const PORT = process.env.PORT || 8080;
 const API_PORT = 8001;
 const API_BASE = `http://localhost:${API_PORT}`;
-const STATIC_DIR = join(process.env.HOME || "/app", "dist", "client");
+const STATIC_DIR = "/app/dist/client";
 
 // Find the CSS file at startup
 let cssFilePath = "";
