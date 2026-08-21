@@ -22,13 +22,26 @@ if not js_files:
     print("ERROR: No index JS file found in dist/client/assets/")
     exit(1)
 
+# Find the entry point - it's the one that has createRoot (after our patch)
+entry_js = None
+for js in js_files:
+    with open(js, "r") as f:
+        content = f.read()
+    if "createRoot" in content:
+        entry_js = js
+        break
+
+if not entry_js:
+    # Fallback: use the largest file (main bundle)
+    entry_js = max(js_files, key=os.path.getsize)
+
+print(f"Entry JS: {os.path.basename(entry_js)}")
+
 links = ""
 for css in css_files:
     links += f'<link rel="stylesheet" href="/assets/{os.path.basename(css)}">\n'
 
-scripts = ""
-for js in js_files:
-    scripts += f'<script type="module" src="/assets/{os.path.basename(js)}"></script>\n'
+scripts = f'<script type="module" src="/assets/{os.path.basename(entry_js)}"></script>\n'
 
 html = f"""<!DOCTYPE html>
 <html lang="en">
