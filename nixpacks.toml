@@ -4,6 +4,7 @@ nixPkgs = ["python311Full", "nodejs_latest", "wget"]
 [phases.install]
 cmds = [
   "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && python3 -m pip install --break-system-packages -r backend/requirements.txt",
+  "ln -sf $(python3 -c 'import sysconfig; print(sysconfig.get_paths()[\"scripts\"])')/pip3 /usr/local/bin/pip || true",
   "npm install --legacy-peer-deps",
   "python3 patch-vite.py",
   "npm run build"
