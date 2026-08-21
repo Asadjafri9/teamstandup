@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brief — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    const projectId = window.location.pathname.split('/').pop();
+    const shouldGenerate = new URLSearchParams(window.location.search).has('generate');
+
+    requireAuth(function(user) {
+      if (shouldGenerate) {
+        streamBrief();
+      } else {
+        loadBrief();
+      }
+
+      function loadBrief() {
+        apiJSON('/api/projects/' + projectId + '/brief/today').then(brief => {
+          renderBrief(brief);
+        }).catch(() => {
+          document.getElementById('app').innerHTML = `
+            <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+            <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
+            <main class="container-sm" style="padding-top:3rem;">
+              <a href="/project/${projectId}" style="font-size:.875rem;color:var(--ink-soft);">← Back to project</a>
+              <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-top:1rem;margin-bottom:2rem;">No brief yet</h1>
+              <div class="box box-shadow-hard" style="padding:2rem;text-align:center;">
+                <div style="width:1rem;height:1rem;background:var(--persian);transform:rotate(45deg);margin:0 auto 1rem;"></div>
+                <p style="color:var(--ink-soft);margin-bottom:1.5rem;">Today's brief hasn't been generated yet. The project leader can generate it once members submit their standups.</p>
+                <a href="/project/${projectId}" class="btn-primary">Back to project</a>
+              </div>
+            </main>`;
+        });
+      }
+
+      function streamBrief() {
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+          <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
+          <main class="container-sm" style="padding-top:3rem;">
+            <h1 style="font-size:3rem;font-weight:700;color:var(--ink);">Generating brief...</h1>
+            <p style="margin-top:.75rem;color:var(--ink-soft);margin-bottom:2rem;">AI is reading all submissions and finding connections</p>
+            <div class="box box-shadow-hard" style="padding:2rem;">
+              <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--line);">
+                <div class="loading-dot"></div><span style="font-size:.875rem;color:var(--ink-soft);">Streaming live...</span>
+              </div>
+              <div id="brief-stream" class="brief-content" style="min-height:200px;"><p style="color:var(--ink-soft);font-style:italic;">Waiting for AI...</p></div>
+              <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--line);"><span style="font-size:.75rem;color:var(--ink-soft);">This usually takes 10-15 seconds</span></div>
+            </div>
+          </main>`;
+
+        fetch('/api/projects/' + projectId + '/brief', { method: 'POST', credentials: 'include' })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to generate brief');
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let content = '';
+            function read() {
+              reader.read().then(({ done, value }) => {
+                if (done) { redirect('/brief/' + projectId); return; }
+                const text = decoder.decode(value, { stream: true });
+                text.split('\n').forEach(line => {
+                  if (line.startsWith('data: ')) {
+                    try {
+                      const d = JSON.parse(line.slice(6));
+                      if (d.content) { content += d.content; document.getElementById('brief-stream').innerHTML = colorCodeBrief(renderMarkdown(content)); }
+                    } catch(e) {}
+                  }
+                });
+                read();
+              }).catch(err => { toast(err.message, true); redirect('/project/' + projectId); });
+            }
+            read();
+          }).catch(err => { toast(err.message, true); redirect('/project/' + projectId); });
+      }
+
+      function renderBrief(brief) {
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+          <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
+          <main class="container-sm" style="padding-top:3rem;padding-bottom:3rem;">
+            <a href="/project/${projectId}" style="font-size:.875rem;color:var(--ink-soft);">← Back to project</a>
+            <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-top:1rem;">Team brief</h1>
+            <p style="margin-top:.75rem;color:var(--ink-soft);">${new Date(brief.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</p>
+            <div style="display:flex;gap:1.5rem;align-items:center;margin:1.5rem 0;">
+              <div class="pill"><strong>${brief.submissions_count}</strong> of <strong>${brief.total_active_members}</strong> submitted</div>
+              <span style="font-size:.75rem;color:var(--ink-soft);">Generated ${new Date(brief.generated_at).toLocaleTimeString()}</span>
+            </div>
+            <div class="box box-shadow-hard" style="padding:2rem;">
+              <div class="brief-content">${colorCodeBrief(renderMarkdown(brief.content))}</div>
+            </div>
+            <div class="box" style="padding:1.5rem;margin-top:1.5rem;background:var(--surface-2);">
+              <h3 style="font-size:.875rem;font-weight:600;color:var(--ink);margin-bottom:.75rem;">Color legend</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.75rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:.75rem;height:.75rem;background:#dc2626;border-radius:.2rem;"></span><span style="color:var(--ink-soft);">Blockers (red)</span></div>
+                <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:.75rem;height:.75rem;background:#16a34a;border-radius:.2rem;"></span><span style="color:var(--ink-soft);">Progress (green)</span></div>
+                <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:.75rem;height:.75rem;background:#2563eb;border-radius:.2rem;"></span><span style="color:var(--ink-soft);">New members (blue)</span></div>
+                <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:.75rem;height:.75rem;background:#d97706;border-radius:.2rem;"></span><span style="color:var(--ink-soft);">Missing (amber)</span></div>
+              </div>
+            </div>
+          </main>`;
+      }
+    });
+  </script>
+</body>
+</html>

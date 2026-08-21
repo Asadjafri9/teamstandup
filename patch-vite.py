@@ -2,7 +2,7 @@ import pathlib
 f = pathlib.Path("node_modules/vite/dist/node/chunks/config.js")
 t = f.read_text()
 old = 'if (!styles.has(id)) throw new Error(`css content for ${JSON.stringify(id)} was not found`);'
-new = 'if (!styles.has(id)) continue;'
+new = 'if (!styles.has(id)) styles.set(id, "");'
 if old in t:
     t = t.replace(old, new)
     f.write_text(t)

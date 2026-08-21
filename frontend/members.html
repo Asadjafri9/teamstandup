@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    const projectId = window.location.pathname.split('/').pop();
+    requireAuth(function(user) {
+      apiJSON('/api/projects/' + projectId).then(project => {
+        const isLeader = project.current_member && project.current_member.role === 'Project Leader';
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+          <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
+          <main class="container-sm" style="padding-top:3rem;padding-bottom:3rem;">
+            <a href="/project/${projectId}" style="font-size:.875rem;color:var(--ink-soft);">← Back to project</a>
+            <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-top:1rem;margin-bottom:2rem;">Members</h1>
+            ${isLeader ? `
+              <div class="box box-shadow-hard" style="padding:1.5rem;margin-bottom:2rem;">
+                <h3 style="font-size:1.125rem;color:var(--ink);margin-bottom:1rem;">Invite by email</h3>
+                <form id="invite-form" style="display:flex;gap:.75rem;">
+                  <input class="form-input" type="email" name="email" required placeholder="teammate@email.com" style="flex:1;">
+                  <select class="form-input" name="role" style="width:auto;">
+                    <option value="Member">Member</option>
+                    <option value="Project Leader">Leader</option>
+                  </select>
+                  <button type="submit" class="btn-primary">Invite</button>
+                </form>
+              </div>
+            ` : ''}
+            <div class="box" style="padding:0;">
+              ${project.members.map(m => `
+                <div class="member-row">
+                  <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:var(--ink);">${escapeHtml((m.name||m.email||'?')[0])}</div>
+                    <div>
+                      <div style="font-size:.875rem;color:var(--ink);">${escapeHtml(m.name||'Unknown')}</div>
+                      <div style="font-size:.75rem;color:var(--ink-soft);">${escapeHtml(m.email||'')}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:.75rem;">
+                    <span class="pill" style="font-size:.65rem;">${escapeHtml(m.role)}</span>
+                    <span class="badge ${m.status==='active'?'badge-submitted':m.status==='invited'?'badge-due':''}" style="${m.status==='removed'?'background:#fee2e2;color:#991b1b;':''}">${escapeHtml(m.status)}</span>
+                    ${isLeader && m.status==='active' && m.role!=='Project Leader' ? `<button class="btn-ghost" style="font-size:.75rem;padding:.3rem .6rem;" onclick="removeMember('${projectId}',${m.id})">Remove</button>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </main>`;
+
+        if (isLeader) {
+          document.getElementById('invite-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {};
+            fd.forEach((v, k) => data[k] = v);
+            apiJSON('/api/projects/' + projectId + '/members', { method: 'POST', body: JSON.stringify(data) })
+              .then(() => { toast('Invite sent!'); location.reload(); })
+              .catch(err => toast(err.message, true));
+          });
+        }
+      }).catch(err => toast(err.message, true));
+    });
+
+    function removeMember(pid, memberId) {
+      if (!confirm('Remove this member?')) return;
+      api('/api/projects/' + pid + '/members/' + memberId, { method: 'DELETE' })
+        .then(() => { toast('Member removed'); location.reload(); })
+        .catch(err => toast(err.message, true));
+    }
+  </script>
+</body>
+</html>

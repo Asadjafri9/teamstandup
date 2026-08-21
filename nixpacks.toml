@@ -1,15 +1,10 @@
 [phases.setup]
-nixPkgs = ["python311Full", "nodejs_latest", "wget"]
+nixPkgs = ["python311Full", "wget"]
 
 [phases.install]
 cmds = [
-  "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && python3 -m pip install --break-system-packages -r backend/requirements.txt",
-  "ln -sf $(python3 -c 'import sysconfig; print(sysconfig.get_paths()[\"scripts\"])')/pip3 /usr/local/bin/pip || true",
-  "npm install --legacy-peer-deps"
+  "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && python3 -m pip install --break-system-packages -r backend/requirements.txt"
 ]
 
-[phases.build]
-cmds = ["python3 patch-vite.py && npm run build"]
-
 [start]
-cmd = "bash start.sh"
+cmd = "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"

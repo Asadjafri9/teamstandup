@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from starlette.responses import RedirectResponse
 from db import init_db, get_db_connection, PLACEHOLDER
 from auth import router as auth_router
@@ -74,6 +75,73 @@ def get_me(request: Request):
 @app.get("/api/health")
 def health():
     return {"ok": True}
+
+
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
+
+# Serve static assets (logo, favicon, etc.)
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+@app.get("/")
+def index():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+
+@app.get("/style.css")
+def serve_css():
+    return FileResponse(os.path.join(FRONTEND_DIR, "style.css"))
+
+
+@app.get("/app.js")
+def serve_js():
+    return FileResponse(os.path.join(FRONTEND_DIR, "app.js"))
+
+
+@app.get("/logo.png")
+def serve_logo():
+    return FileResponse(os.path.join(FRONTEND_DIR, "logo.png"))
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
+
+
+@app.get("/new")
+def new_project():
+    return FileResponse(os.path.join(FRONTEND_DIR, "new.html"))
+
+
+@app.get("/project/{project_id}")
+def project_page(project_id: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "project.html"))
+
+
+@app.get("/standup/{project_id}")
+def standup_page(project_id: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "standup.html"))
+
+
+@app.get("/brief/{project_id}")
+def brief_page(project_id: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "brief.html"))
+
+
+@app.get("/members/{project_id}")
+def members_page(project_id: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "members.html"))
+
+
+@app.get("/invite-links/{project_id}")
+def invite_links_page(project_id: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "invite-links.html"))
+
+
+@app.get("/join/{token}")
+def join_page(token: str):
+    return FileResponse(os.path.join(FRONTEND_DIR, "join.html"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Project — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    requireAuth(function(user) {
+      document.getElementById('app').innerHTML = `
+        <header class="nav-header">
+          <a href="/dashboard" class="nav-logo"><img src="/logo.png" alt="StandupBot"> StandupBot</a>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name || user.email)}</span>
+            <a href="/dashboard" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a>
+          </div>
+        </header>
+        <main class="container-sm" style="padding-top:3rem;padding-bottom:3rem;">
+          <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-bottom:2rem;">New project</h1>
+          <form id="new-project-form" class="box box-shadow-hard" style="padding:2rem;">
+            <div class="form-group">
+              <label class="form-label">Project name</label>
+              <input class="form-input" name="name" required placeholder="e.g. Final Year Project">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description (optional)</label>
+              <textarea class="form-input" name="description" placeholder="What is this project about?"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Deadline (optional)</label>
+              <input class="form-input" type="date" name="deadline">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Standup closes at</label>
+              <input class="form-input" type="time" name="standup_closes_at" value="21:00">
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Create project</button>
+          </form>
+        </main>
+      `;
+
+      document.getElementById('new-project-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = {};
+        fd.forEach((v, k) => { if (v) data[k] = v; });
+        apiJSON('/api/projects', { method: 'POST', body: JSON.stringify(data) })
+          .then(p => { toast('Project created!'); redirect('/project/' + p.id); })
+          .catch(err => toast(err.message, true));
+      });
+    });
+  </script>
+</body>
+</html>

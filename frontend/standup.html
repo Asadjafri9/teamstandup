@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Standup — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    const projectId = window.location.pathname.split('/').pop();
+    requireAuth(function(user) {
+      apiJSON('/api/projects/' + projectId + '/standup/today').then(data => {
+        if (data.standup_closed) {
+          document.getElementById('app').innerHTML = `
+            <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+            <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
+            <main class="container-sm" style="padding-top:3rem;text-align:center;">
+              <div class="box box-shadow-hard" style="padding:2rem;"><h1 style="font-size:2rem;color:var(--ink);margin-bottom:1rem;">Standup closed</h1><p style="color:var(--ink-soft);">${escapeHtml(data.message)}</p><a href="/brief/${projectId}" class="btn-primary" style="margin-top:1.5rem;">View brief</a></div>
+            </main>`;
+          return;
+        }
+
+        const existing = data.standup || {};
+        const isFirst = data.is_first_standup;
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+          <div style="display:flex;align-items:center;gap:1rem;"><span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name||user.email)}</span>
+          <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></div></header>
+          <main class="container-sm" style="padding-top:3rem;padding-bottom:3rem;">
+            <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;">Daily standup</h1>
+            <p style="color:var(--ink-soft);margin-bottom:.5rem;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</p>
+            ${isFirst ? '<div class="pill" style="margin-bottom:1.5rem;background:var(--accent-2);border-color:var(--accent-2);">First standup — welcome!</div>' : ''}
+            <form id="standup-form" class="box box-shadow-hard" style="padding:2rem;">
+              <div class="form-group"><label class="form-label">What did you do yesterday?</label><textarea class="form-input" name="did" required placeholder="I worked on...">${escapeHtml(existing.did||'')}</textarea></div>
+              <div class="form-group"><label class="form-label">What will you do today?</label><textarea class="form-input" name="will_do" required placeholder="I plan to...">${escapeHtml(existing.will_do||'')}</textarea></div>
+              <div class="form-group"><label class="form-label">Any blockers?</label><textarea class="form-input" name="blocker" placeholder="Nothing blocking me...">${escapeHtml(existing.blocker||'')}</textarea></div>
+              <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">${data.submitted ? 'Update standup' : 'Submit standup'}</button>
+            </form>
+          </main>`;
+
+        document.getElementById('standup-form').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          const data = {};
+          fd.forEach((v, k) => data[k] = v);
+          apiJSON('/api/projects/' + projectId + '/standup', { method: 'POST', body: JSON.stringify(data) })
+            .then(r => { toast(`Submitted! ${r.submitted_count}/${r.total_active_members} members have submitted.`); redirect('/project/' + projectId); })
+            .catch(err => toast(err.message, true));
+        });
+      }).catch(err => {
+        document.getElementById('app').innerHTML = `<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);">${escapeHtml(err.message)}</p></div></main>`;
+      });
+    });
+  </script>
+</body>
+</html>

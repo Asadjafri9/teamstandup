@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    requireAuth(function(user) {
+      document.getElementById('app').innerHTML = `
+        <header class="nav-header">
+          <a href="/dashboard" class="nav-logo"><img src="/logo.png" alt="StandupBot"> StandupBot</a>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name || user.email)}</span>
+            <button class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;" onclick="doLogout()">Logout</button>
+          </div>
+        </header>
+        <main class="container" style="padding-top:3rem;padding-bottom:3rem;">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:3rem;">
+            <div><h1 style="font-size:3rem;font-weight:700;color:var(--ink);">Your projects</h1><p style="margin-top:.75rem;color:var(--ink-soft);" id="project-count">Loading...</p></div>
+            <a href="/new" class="btn-primary">+ New project</a>
+          </div>
+          <div id="invites-section"></div>
+          <div id="projects-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;"></div>
+        </main>
+      `;
+
+      Promise.all([
+        apiJSON('/api/projects'),
+        apiJSON('/api/pending-invites').catch(() => [])
+      ]).then(([projects, invites]) => {
+        document.getElementById('project-count').textContent = `${projects.length} active ${projects.length === 1 ? 'project' : 'projects'}`;
+
+        if (invites.length > 0) {
+          document.getElementById('invites-section').innerHTML = `
+            <div class="box" style="padding:1.5rem;margin-bottom:2rem;border-color:var(--persian);">
+              <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:1rem;">Pending invites</h3>
+              ${invites.map(inv => `
+                <div class="member-row">
+                  <div><strong>${escapeHtml(inv.project_name)}</strong> — ${escapeHtml(inv.role)}</div>
+                  <div style="display:flex;gap:.5rem;">
+                    <button class="btn-primary" style="font-size:.75rem;padding:.4rem .8rem;" onclick="acceptInvite(${inv.id},'${inv.project_id}')">Accept</button>
+                    <button class="btn-ghost" style="font-size:.75rem;padding:.4rem .8rem;" onclick="declineInvite(${inv.id},'${inv.project_id}')">Decline</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        if (projects.length === 0) {
+          document.getElementById('projects-grid').innerHTML = `
+            <div class="box" style="padding:3rem;text-align:center;grid-column:1/-1;">
+              <div style="width:1rem;height:1rem;background:var(--persian);transform:rotate(45deg);margin:0 auto 1rem;"></div>
+              <p style="color:var(--ink-soft);margin-bottom:1.5rem;">No projects yet. Create your first one!</p>
+              <a href="/new" class="btn-primary">+ New project</a>
+            </div>
+          `;
+        } else {
+          document.getElementById('projects-grid').innerHTML = projects.map(p => {
+            const status = p.today_status || 'standup_due';
+            const badge = status === 'submitted' ? '<span class="badge badge-submitted">Submitted</span>'
+                        : status === 'brief_ready' ? '<span class="badge badge-brief">Brief ready</span>'
+                        : '<span class="badge badge-due">Standup due</span>';
+            return `
+              <a href="/project/${p.id}" class="project-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
+                  <h3 style="font-size:1.25rem;color:var(--ink);">${escapeHtml(p.name)}</h3>
+                  ${badge}
+                </div>
+                <p style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(p.description || 'No description')}</p>
+                <div style="margin-top:1rem;display:flex;gap:.75rem;align-items:center;">
+                  <span class="pill">${escapeHtml(p.role || 'Member')}</span>
+                  ${p.deadline ? `<span style="font-size:.75rem;color:var(--ink-soft);">Due: ${p.deadline}</span>` : ''}
+                </div>
+              </a>
+            `;
+          }).join('');
+        }
+      }).catch(err => toast(err.message, true));
+    });
+
+    function doLogout() {
+      api('/auth/logout', { method: 'POST' }).then(() => redirect('/'));
+    }
+    function acceptInvite(id, pid) {
+      apiJSON(`/api/projects/${pid}/members/${id}/accept`, { method: 'POST' }).then(() => { toast('Invite accepted!'); setTimeout(() => location.reload(), 1000); }).catch(e => toast(e.message, true));
+    }
+    function declineInvite(id, pid) {
+      apiJSON(`/api/projects/${pid}/members/${id}/decline`, { method: 'POST' }).then(() => { toast('Invite declined'); setTimeout(() => location.reload(), 1000); }).catch(e => toast(e.message, true));
+    }
+  </script>
+</body>
+</html>

@@ -1,47 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StandupBot</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StandupBot — Async standups that actually think</title>
+  <meta name="description" content="Each teammate answers 3 questions in 90 seconds. AI reads everyone's updates together and writes one brief that flags blockers, dependencies, and missing members. Built for student teams.">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-
-    <header class="navbar">
-        <div class="container">
-            <h1 class="logo">StandupBot</h1>
-            <nav>
-                <ul>
-                    <li><a href="#" id="login-button">Sign In</a></li>
-                </ul>
-            </nav>
-        </div>
+  <main style="min-height:100vh;background:var(--background);color:var(--foreground);">
+    <!-- Nav -->
+    <header class="nav-header">
+      <a href="/" class="nav-logo"><img src="/logo.png" alt="StandupBot"> StandupBot</a>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <a href="#how" style="font-size:.875rem;color:var(--ink-soft);">How it works</a>
+        <a href="#features" style="font-size:.875rem;color:var(--ink-soft);">Features</a>
+        <button class="btn-primary" style="font-size:.875rem;padding:.5rem 1rem;border-radius:999px;" onclick="document.getElementById('login-modal').style.display='flex'">Start free
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
     </header>
 
-    <main class="container">
-        <div class="hero">
-            <h2>Async standups for student teams.</h2>
-            <p>No meetings. 90 seconds a day.</p>
-            <button id="main-login-button" class="btn btn-primary">Sign in with Google</button>
+    <!-- Hero -->
+    <section style="border-bottom:1px solid var(--line-strong);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;" class="bg-grid"></div>
+      <div style="position:relative;max-width:56rem;margin:0 auto;padding:6rem 1.5rem 5rem;">
+        <div class="pill" style="margin-bottom:1.5rem;"><span style="width:.375rem;height:.375rem;border-radius:50%;background:var(--accent-2);" class="pulse-dot"></span>Built for Iterate '26</div>
+        <h1 class="reveal" style="font-size:clamp(3rem,9vw,7rem);font-weight:700;color:var(--ink);max-width:48rem;">Async standups<br>that actually <em style="font-style:italic;color:var(--persian);">think</em>.</h1>
+        <p class="reveal" style="margin-top:1.5rem;font-size:1.125rem;color:var(--ink-soft);max-width:36rem;line-height:1.6;">Each teammate answers 3 questions in 90 seconds. AI reads everyone's updates together and writes one brief that flags blockers, dependencies, and missing members. Built for student teams.</p>
+        <div class="reveal" style="margin-top:2rem;display:flex;gap:.75rem;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="document.getElementById('login-modal').style.display='flex'">Start free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <a href="#how" class="btn-ghost">See how it works</a>
         </div>
-    </main>
+      </div>
+    </section>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Welcome to StandupBot</h2>
-            <p>Get started by signing in with your Google account.</p>
-            <a href="/auth/google" class="btn btn-google">
-                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
-                Continue with Google
-            </a>
-            <div class="separator">or</div>
-            <a href="#" id="invite-link-button" class="btn btn-secondary">I have an invite link</a>
+    <!-- Trust Strip -->
+    <section style="border-bottom:1px solid var(--line-strong);background:var(--surface-2);overflow:hidden;">
+      <div style="max-width:80rem;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:center;">
+        <span style="font-family:monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);white-space:nowrap;">Trusted by teams running →</span>
+        <div style="overflow:hidden;mask-image:linear-gradient(to right,transparent,black 10%,black 90%,transparent);">
+          <div class="ticker-track" style="display:flex;gap:3rem;width:max-content;font-family:var(--font-display);font-size:1.1rem;color:var(--ink);">
+            <span style="display:flex;gap:3rem;align-items:center;">FYP TEAMS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">HACKATHON SQUADS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">SOCIETY PROJECTS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">COURSE GROUPS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">RESEARCH POD<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">CAPSTONE<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">STARTUP CLUB<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">BOOTCAMP COHORTS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">FYP TEAMS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">HACKATHON SQUADS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">SOCIETY PROJECTS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">COURSE GROUPS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">RESEARCH POD<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">CAPSTONE<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">STARTUP CLUB<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+            <span style="display:flex;gap:3rem;align-items:center;">BOOTCAMP COHORTS<span style="width:.375rem;height:.375rem;transform:rotate(45deg);background:var(--persian);"></span></span>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Problem/Solution -->
+    <section id="problem" style="border-bottom:1px solid var(--line-strong);">
+      <div class="container" style="padding-top:6rem;padding-bottom:6rem;">
+        <div class="section-label" style="margin-bottom:1rem;">The shift</div>
+        <h2 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:700;color:var(--ink);max-width:48rem;">From group chat chaos to one <span style="text-decoration:underline;text-decoration-color:var(--accent-2);text-decoration-thickness:3px;text-underline-offset:4px;">smart brief</span>.</h2>
+        <div style="margin-top:4rem;display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line-strong);">
+          <div style="padding:2.5rem;border-bottom:1px solid var(--line-strong);background:var(--surface-2);">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;"><span style="font-family:monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);">01 / Old way</span><span style="font-family:var(--font-display);font-size:1.75rem;color:var(--ink-soft);text-decoration:line-through;">WhatsApp</span></div>
+            <ul style="list-style:none;">
+              <li style="display:flex;gap:.75rem;color:var(--ink-soft);margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;border:1px solid var(--ink-soft);flex-shrink:0;"></span>40+ unread WhatsApp messages by lunchtime</li>
+              <li style="display:flex;gap:.75rem;color:var(--ink-soft);margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;border:1px solid var(--ink-soft);flex-shrink:0;"></span>Blockers buried under memes and voice notes</li>
+              <li style="display:flex;gap:.75rem;color:var(--ink-soft);margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;border:1px solid var(--ink-soft);flex-shrink:0;"></span>Two people doing the same task — neither knew</li>
+              <li style="display:flex;gap:.75rem;color:var(--ink-soft);margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;border:1px solid var(--ink-soft);flex-shrink:0;"></span>Leader pings everyone manually. Every. Day.</li>
+              <li style="display:flex;gap:.75rem;color:var(--ink-soft);"><span style="margin-top:.5rem;width:.75rem;height:.75rem;border:1px solid var(--ink-soft);flex-shrink:0;"></span>Crisis mode 48h before deadline</li>
+            </ul>
+          </div>
+          <div style="padding:2.5rem;background:var(--persian);color:var(--ghost);position:relative;overflow:hidden;">
+            <div style="position:absolute;inset:0;opacity:.6;" class="bg-grid-dark"></div>
+            <div style="position:relative;">
+              <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;"><span style="font-family:monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(247,247,255,0.7);">02 / New way</span><span style="font-family:var(--font-display);font-size:1.75rem;">StandupBot</span></div>
+              <ul style="list-style:none;">
+                <li style="display:flex;gap:.75rem;margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;background:var(--accent-2);flex-shrink:0;"></span>Each member: 3 questions, 90 seconds, private</li>
+                <li style="display:flex;gap:.75rem;margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;background:var(--accent-2);flex-shrink:0;"></span>AI reads ALL submissions together — not in isolation</li>
+                <li style="display:flex;gap:.75rem;margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;background:var(--accent-2);flex-shrink:0;"></span>Names who is blocked + who can unblock them</li>
+                <li style="display:flex;gap:.75rem;margin-bottom:1rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;background:var(--accent-2);flex-shrink:0;"></span>Welcomes new joiners, flags missing members</li>
+                <li style="display:flex;gap:.75rem;"><span style="margin-top:.5rem;width:.75rem;height:.75rem;background:var(--accent-2);flex-shrink:0;"></span>One brief. One scroll. Whole team aligned.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" style="border-bottom:1px solid var(--line-strong);">
+      <div class="container" style="padding-top:6rem;padding-bottom:6rem;">
+        <div class="section-label" style="margin-bottom:1rem;">What you get</div>
+        <h2 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:700;color:var(--ink);max-width:36rem;">Six things StandupBot does that WhatsApp can't.</h2>
+        <div style="margin-top:3.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
+          <article class="box box-shadow-hard" style="padding:1.5rem;"><div style="font-family:monospace;font-size:.75rem;color:var(--ink-soft);">01</div><h3 style="font-size:1.5rem;margin-top:.75rem;color:var(--ink);">Private submissions</h3><p style="margin-top:.5rem;font-size:.875rem;color:var(--ink-soft);">No group chat pressure. Each member answers privately. No one sees anyone else's blockers until the brief.</p></article>
+          <article class="box box-shadow-hard" style="padding:1.5rem;"><div style="font-family:monospace;font-size:.75rem;color:var(--ink-soft);">02</div><h3 style="font-size:1.5rem;margin-top:.75rem;color:var(--ink);">AI reads everything together</h3><p style="margin-top:.5rem;font-size:.875rem;color:var(--ink-soft);">Not a summary of each message. One prompt, all submissions, cross-references and connections surfaced.</p></article>
+          <article class="box box-shadow-hard" style="padding:1.5rem;background:var(--persian);color:white;"><div style="font-family:monospace;font-size:.75rem;color:rgba(255,255,255,0.7);">03</div><h3 style="font-size:1.5rem;margin-top:.75rem;color:white;">Streaming brief</h3><p style="margin-top:.5rem;font-size:.875rem;color:rgba(255,255,255,0.9);">Watch the brief generate live. 10-15 seconds. Everyone on the project sees it at the same time.</p></article>
+          <article class="box box-shadow-hard" style="padding:1.5rem;"><div style="font-family:monospace;font-size:.75rem;color:var(--ink-soft);">04</div><h3 style="font-size:1.5rem;margin-top:.75rem;color:var(--ink);">Role-tagged invite links</h3><p style="margin-top:.5rem;font-size:.875rem;color:var(--ink-soft);">Generate a link with a role baked in. Drop it in WhatsApp. Done.</p></article>
+          <article class="box box-shadow-hard" style="padding:1.5rem;grid-column:span 2;"><div style="font-family:monospace;font-size:.75rem;color:var(--ink-soft);">05</div><h3 style="font-size:1.5rem;margin-top:.75rem;color:var(--ink);">Color-coded risk</h3><p style="margin-top:.5rem;font-size:.875rem;color:var(--ink-soft);">Blockers red, shipped green, missing amber, welcomes blue. Scan in 5 seconds.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how" style="border-bottom:1px solid var(--line-strong);">
+      <div class="container" style="padding-top:6rem;padding-bottom:6rem;">
+        <div class="section-label" style="margin-bottom:1rem;">The flow</div>
+        <h2 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:700;color:var(--ink);max-width:48rem;">Four steps. Zero meetings.</h2>
+        <div style="margin-top:3.5rem;border:1px solid var(--line-strong);">
+          <div style="display:grid;grid-template-columns:200px 1fr auto;gap:1.5rem;padding:2.5rem;border-bottom:1px solid var(--line-strong);"><div style="font-family:var(--font-display);font-size:5rem;color:rgba(39,24,126,0.15);line-height:1;">01</div><div><h3 style="font-size:2rem;color:var(--ink);">Create the project</h3><p style="margin-top:.75rem;color:var(--ink-soft);max-width:36rem;">Name, deadline, standup-close time. 60 seconds. Add members by email or copy a role-tagged invite link into your WhatsApp.</p></div><span class="pill" style="align-self:center;">step 01</span></div>
+          <div style="display:grid;grid-template-columns:200px 1fr auto;gap:1.5rem;padding:2.5rem;border-bottom:1px solid var(--line-strong);"><div style="font-family:var(--font-display);font-size:5rem;color:rgba(39,24,126,0.15);line-height:1;">02</div><div><h3 style="font-size:2rem;color:var(--ink);">Everyone submits — privately</h3><p style="margin-top:.75rem;color:var(--ink-soft);max-width:36rem;">Each member opens their personal link, answers 3 questions. Submissions are siloed: no one sees anyone else's blockers.</p></div><span class="pill" style="align-self:center;">step 02</span></div>
+          <div style="display:grid;grid-template-columns:200px 1fr auto;gap:1.5rem;padding:2.5rem;border-bottom:1px solid var(--line-strong);"><div style="font-family:var(--font-display);font-size:5rem;color:rgba(39,24,126,0.15);line-height:1;">03</div><div><h3 style="font-size:2rem;color:var(--ink);">Leader hits Generate Brief</h3><p style="margin-top:.75rem;color:var(--ink-soft);max-width:36rem;">All submissions plus project context are sent in one prompt. Streaming output renders live on every active member's screen.</p></div><span class="pill" style="align-self:center;">step 03</span></div>
+          <div style="display:grid;grid-template-columns:200px 1fr auto;gap:1.5rem;padding:2.5rem;"><div style="font-family:var(--font-display);font-size:5rem;color:rgba(39,24,126,0.15);line-height:1;">04</div><div><h3 style="font-size:2rem;color:var(--ink);">Read one brief. Done.</h3><p style="margin-top:.75rem;color:var(--ink-soft);max-width:36rem;">Color-coded sections call out blockers, new joiners, missing teammates, and the overall risk. No more scrolling 40 chat messages.</p></div><span class="pill" style="align-self:center;">step 04</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta" style="background:var(--persian);color:var(--ghost);border-bottom:1px solid var(--line-strong);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;opacity:.7;" class="bg-grid-dark"></div>
+      <div style="position:relative;max-width:64rem;margin:0 auto;padding:7rem 1.5rem;text-align:center;">
+        <div class="pill" style="background:transparent;color:var(--ghost);border-color:rgba(247,247,255,0.4);margin-bottom:2rem;"><span style="width:.375rem;height:.375rem;border-radius:50%;background:var(--accent-2);" class="pulse-dot"></span>Free for teams up to 5</div>
+        <h2 style="font-size:clamp(3rem,9vw,8rem);font-weight:700;line-height:.9;">Stop chasing.</h2>
+        <h2 style="font-size:clamp(3rem,9vw,8rem);font-weight:700;line-height:.9;">Start shipping.</h2>
+        <p style="margin-top:2rem;max-width:36rem;margin-left:auto;margin-right:auto;color:rgba(247,247,255,0.8);font-size:1.125rem;">Spin up your first standup in under a minute. No credit card. No Slack workspace required.</p>
+        <div style="margin-top:2.5rem;max-width:32rem;margin-left:auto;margin-right:auto;display:flex;flex-direction:column;gap:.75rem;">
+          <a href="/auth/google" class="btn-primary" style="background:var(--accent-2);color:var(--ink);border-color:var(--accent-2);box-shadow:4px 4px 0 0 rgba(0,0,0,0.4);justify-content:center;">Sign in with Google →</a>
+          <a href="/auth/demo" class="btn-ghost" style="color:var(--ghost);border-color:rgba(247,247,255,0.4);justify-content:center;">Try Demo — no sign in needed</a>
+        </div>
+        <p style="margin-top:1.5rem;font-family:monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(247,247,255,0.6);">90 seconds a day · 0 meetings · 1 brief</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background:var(--ghost);">
+      <div class="container" style="padding:2.5rem 1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;font-size:.875rem;color:var(--ink-soft);">
+        <div style="display:flex;align-items:center;gap:.75rem;font-family:var(--font-display);font-size:1rem;color:var(--ink);"><img src="/logo.png" alt="StandupBot" style="width:2rem;height:2rem;object-fit:contain;"> StandupBot</div>
+        <div style="font-family:monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">Built for Iterate '26 · © 2026</div>
+        <div style="display:flex;gap:1.25rem;"><a href="#" style="color:var(--ink-soft);">Twitter</a><a href="#" style="color:var(--ink-soft);">GitHub</a><a href="#" style="color:var(--ink-soft);">Privacy</a></div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Login Modal -->
+  <div id="login-modal" style="display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);">
+    <div style="position:relative;background:var(--surface);border:2px solid var(--line-strong);width:100%;max-width:28rem;margin:0 1rem;padding:2rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+      <button onclick="document.getElementById('login-modal').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--ink-soft);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div style="text-align:center;margin-bottom:2rem;">
+        <img src="/logo.png" alt="StandupBot" style="width:4rem;height:4rem;margin:0 auto 1rem;object-fit:contain;">
+        <h2 style="font-size:1.5rem;font-weight:700;color:var(--ink);">Welcome to StandupBot</h2>
+        <p style="font-size:.875rem;color:var(--ink-soft);margin-top:.5rem;">Sign in to start your first project</p>
+      </div>
+      <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:.75rem;padding:1rem 1.5rem;border:2px solid var(--line-strong);background:var(--surface);margin-bottom:.75rem;text-decoration:none;color:var(--ink);font-weight:600;">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </a>
+      <a href="/auth/demo" style="display:flex;align-items:center;justify-content:center;gap:.75rem;padding:1rem 1.5rem;border:2px solid var(--persian);background:var(--persian);color:white;text-decoration:none;font-weight:600;margin-bottom:1.5rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
+        Try Demo — no sign in needed
+      </a>
     </div>
+  </div>
 
-    <script src="js/app.js"></script>
+  <script src="/app.js"></script>
+  <script>getUser().then(u => { if (u) redirect('/dashboard'); });</script>
 </body>
 </html>

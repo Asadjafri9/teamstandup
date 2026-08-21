@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Project — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    const token = window.location.pathname.split('/').pop();
+    getUser().then(user => {
+      if (!user) {
+        document.getElementById('app').innerHTML = `
+          <main class="container-sm" style="padding-top:5rem;text-align:center;">
+            <img src="/logo.png" alt="StandupBot" style="width:4rem;margin:0 auto 1.5rem;">
+            <h1 style="font-size:2.5rem;font-weight:700;color:var(--ink);margin-bottom:1rem;">Sign in to join</h1>
+            <p style="color:var(--ink-soft);margin-bottom:2rem;">You need to be signed in to accept this invite.</p>
+            <a href="/auth/google" class="btn-primary" style="justify-content:center;">Continue with Google</a>
+            <a href="/auth/demo" class="btn-ghost" style="margin-top:.75rem;justify-content:center;">Try Demo</a>
+          </main>`;
+        return;
+      }
+
+      apiJSON('/api/join/' + token).then(invite => {
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
+          <span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name||user.email)}</span></header>
+          <main class="container-sm" style="padding-top:3rem;text-align:center;">
+            <h1 style="font-size:3rem;font-weight:700;color:var(--ink);margin-bottom:1rem;">Join project</h1>
+            <div class="box box-shadow-hard" style="padding:2rem;margin-top:1.5rem;">
+              <h2 style="font-size:1.5rem;color:var(--ink);">${escapeHtml(invite.project_name)}</h2>
+              <p style="color:var(--ink-soft);margin-top:.5rem;">Role: <span class="pill" style="margin-left:.5rem;">${escapeHtml(invite.role)}</span></p>
+              <button class="btn-primary" style="margin-top:1.5rem;" onclick="acceptInvite('${token}')">Accept invite</button>
+            </div>
+          </main>`;
+      }).catch(err => {
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></header>
+          <main class="container-sm" style="padding-top:3rem;text-align:center;">
+            <div class="box" style="padding:2rem;border-color:var(--destructive);background:#fee2e2;">
+              <p style="color:var(--destructive);font-weight:500;">${escapeHtml(err.message)}</p>
+              <a href="/dashboard" class="btn-primary" style="margin-top:1.5rem;">Go to dashboard</a>
+            </div>
+          </main>`;
+      });
+    });
+
+    function acceptInvite(t) {
+      apiJSON('/api/join/' + t, { method: 'POST' }).then(r => { toast('Joined!'); redirect('/project/' + r.project_id); }).catch(err => toast(err.message, true));
+    }
+  </script>
+</body>
+</html>

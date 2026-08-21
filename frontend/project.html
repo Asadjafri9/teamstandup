@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project — StandupBot</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app" class="loading"><div class="loading-dot"></div></div>
+  <script src="/app.js"></script>
+  <script>
+    const projectId = window.location.pathname.split('/').pop();
+    requireAuth(function(user) {
+      Promise.all([
+        apiJSON('/api/projects/' + projectId),
+        apiJSON('/api/projects/' + projectId + '/standups/status').catch(() => []),
+        apiJSON('/api/projects/' + projectId + '/brief/today').catch(() => null)
+      ]).then(([project, status, brief]) => {
+        const isLeader = project.current_member && project.current_member.role === 'Project Leader';
+        const submittedCount = status.filter(m => m.submitted).length;
+        const totalMembers = status.length;
+
+        document.getElementById('app').innerHTML = `
+          <header class="nav-header">
+            <a href="/dashboard" class="nav-logo"><img src="/logo.png" alt="StandupBot"> StandupBot</a>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name || user.email)}</span>
+              <a href="/dashboard" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Dashboard</a>
+            </div>
+          </header>
+          <main class="container" style="padding-top:3rem;padding-bottom:3rem;">
+            <a href="/dashboard" style="font-size:.875rem;color:var(--ink-soft);margin-bottom:1rem;display:inline-flex;align-items:center;gap:.5rem;">← Back to dashboard</a>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;">
+              <div>
+                <h1 style="font-size:3rem;font-weight:700;color:var(--ink);">${escapeHtml(project.name)}</h1>
+                <p style="margin-top:.75rem;color:var(--ink-soft);">${escapeHtml(project.description || '')}</p>
+                <div style="margin-top:1rem;display:flex;gap:.75rem;align-items:center;">
+                  <span class="pill">${escapeHtml(project.current_member.role)}</span>
+                  ${project.deadline ? `<span style="font-size:.75rem;color:var(--ink-soft);">Deadline: ${project.deadline}</span>` : ''}
+                  <span style="font-size:.75rem;color:var(--ink-soft);">Standup closes: ${project.standup_closes_at}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-bottom:2rem;">
+              <a href="/standup/${projectId}" class="project-card">
+                <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:.5rem;">Submit standup</h3>
+                <p style="font-size:.875rem;color:var(--ink-soft);">Answer 3 questions in 90 seconds</p>
+              </a>
+              <a href="/brief/${projectId}" class="project-card">
+                <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:.5rem;">View brief</h3>
+                <p style="font-size:.875rem;color:var(--ink-soft);">${brief ? 'Brief is ready' : 'No brief yet'}</p>
+              </a>
+              <a href="/members/${projectId}" class="project-card">
+                <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:.5rem;">Members</h3>
+                <p style="font-size:.875rem;color:var(--ink-soft);">${project.members ? project.members.length : 0} members</p>
+              </a>
+              ${isLeader ? `<a href="/invite-links/${projectId}" class="project-card">
+                <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:.5rem;">Invite links</h3>
+                <p style="font-size:.875rem;color:var(--ink-soft);">Generate role-tagged links</p>
+              </a>` : ''}
+            </div>
+
+            <div class="box" style="padding:1.5rem;margin-bottom:2rem;">
+              <h3 style="font-size:1.25rem;color:var(--ink);margin-bottom:1rem;">Today's standup status</h3>
+              <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
+                <div class="pill"><strong>${submittedCount}</strong> of <strong>${totalMembers}</strong> submitted</div>
+                ${isLeader && submittedCount > 0 && !brief ? `<button class="btn-primary" style="font-size:.875rem;" onclick="generateBrief('${projectId}')">Generate brief</button>` : ''}
+              </div>
+              ${status.map(m => `
+                <div class="member-row">
+                  <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div style="width:2rem;height:2rem;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:var(--ink);">${escapeHtml((m.name || '?')[0])}</div>
+                    <span style="font-size:.875rem;color:var(--ink);">${escapeHtml(m.name || 'Unknown')}</span>
+                    <span class="pill" style="font-size:.65rem;">${escapeHtml(m.role)}</span>
+                  </div>
+                  ${m.submitted ? '<span class="badge badge-submitted">✓ Submitted</span>' : '<span class="badge badge-due">Pending</span>'}
+                </div>
+              `).join('')}
+            </div>
+          </main>
+        `;
+      }).catch(err => {
+        document.getElementById('app').innerHTML = `<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);font-weight:500;">${escapeHtml(err.message)}</p></div></main>`;
+      });
+    });
+
+    function generateBrief(pid) {
+      toast('Generating brief...');
+      fetch('/api/projects/' + pid + '/brief', { method: 'POST', credentials: 'include' })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to generate brief');
+          redirect('/brief/' + pid + '?generate=1');
+        })
+        .catch(err => toast(err.message, true));
+    }
+  </script>
+</body>
+</html>
