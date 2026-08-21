@@ -36,8 +36,9 @@ app.include_router(standups_router)
 app.include_router(briefs_router)
 
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "dist")
-if os.path.isdir(frontend_dir):
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+assets_dir = os.path.join(frontend_dir, "assets")
+if os.path.isdir(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 
 @app.get("/api/pending-invites")
