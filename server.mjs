@@ -6,19 +6,24 @@ import ssrServer from "./dist/server/server.js";
 const PORT = process.env.PORT || 8080;
 const API_PORT = 8001;
 const API_BASE = `http://localhost:${API_PORT}`;
-const STATIC_DIR = join(process.cwd(), "dist", "client");
+const STATIC_DIR = join(process.env.HOME || "/app", "dist", "client");
 
 // Find the CSS file at startup
 let cssFilePath = "";
 try {
-  const files = await readdir(join(STATIC_DIR, "assets"));
+  const assetsDir = join(STATIC_DIR, "assets");
+  console.log(`Looking for CSS in: ${assetsDir}`);
+  const files = await readdir(assetsDir);
+  console.log(`Files in assets: ${files.join(", ")}`);
   const cssFile = files.find((f) => f.endsWith(".css"));
   if (cssFile) {
     cssFilePath = `/assets/${cssFile}`;
     console.log(`Found CSS: ${cssFilePath}`);
+  } else {
+    console.log("No CSS file found in assets directory");
   }
-} catch {
-  console.log("No CSS file found in dist/client/assets");
+} catch (e) {
+  console.log(`Error finding CSS: ${e.message}`);
 }
 
 const MIME_TYPES = {
