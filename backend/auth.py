@@ -126,45 +126,6 @@ async def google_callback(code: str, request: Request):
     return response
 
 
-@router.get("/auth/demo")
-def demo_login():
-    """Demo login endpoint — creates a demo user and sets a session cookie."""
-    conn = get_db_connection()
-
-    try:
-        existing = conn.execute(f"SELECT * FROM users WHERE email = {PLACEHOLDER}", ("demo@standupbot.dev",)).fetchone()
-        if existing:
-            user_id = existing["id"]
-        else:
-            if USE_POSTGRES:
-                cursor = conn.execute(
-                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}) RETURNING id",
-                    ("demo@standupbot.dev", "Demo User", ""),
-                )
-                user_id = cursor.fetchone()["id"]
-            else:
-                cursor = conn.execute(
-                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
-                    ("demo@standupbot.dev", "Demo User", ""),
-                )
-                user_id = cursor.lastrowid
-            conn.commit()
-    finally:
-        conn.close()
-
-    token = serializer.dumps(user_id)
-    response = RedirectResponse(url=f"{APP_URL}/dashboard")
-    response.set_cookie(
-        COOKIE_NAME,
-        token,
-        max_age=COOKIE_MAX_AGE,
-        httponly=True,
-        samesite="lax",
-        domain=os.getenv("COOKIE_DOMAIN", None),
-    )
-    return response
-
-
 @router.post("/auth/logout")
 def logout(response: Response):
     response.delete_cookie(
