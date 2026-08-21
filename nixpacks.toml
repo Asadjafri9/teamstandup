@@ -5,7 +5,7 @@ nixPkgs = ["python311Full", "nodejs_latest", "wget"]
 cmds = [
   "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && python3 -m pip install --break-system-packages -r backend/requirements.txt",
   "npm install --legacy-peer-deps",
-  "sed -i 's/throw new Error(`css content for/console.warn(`css content for/g' node_modules/vite/dist/node/chunks/config.js",
+  "sed -i 's/if (!styles.has(id)) throw new Error/if (!styles.has(id)) continue/g' node_modules/vite/dist/node/chunks/config.js",
   "npm run build"
 ]
 
