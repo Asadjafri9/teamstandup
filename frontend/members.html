@@ -15,7 +15,7 @@
     requireAuth(function(user) {
       apiJSON('/api/projects/' + projectId).then(project => {
         const isLeader = project.current_member && project.current_member.role === 'Project Leader';
-        document.getElementById('app').innerHTML = `
+        renderApp`
           <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
           <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
           <main class="container-sm" style="padding-top:3rem;padding-bottom:3rem;">

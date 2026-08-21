@@ -15,7 +15,7 @@
     requireAuth(function(user) {
       apiJSON('/api/projects/' + projectId + '/standup/today').then(data => {
         if (data.standup_closed) {
-          document.getElementById('app').innerHTML = `
+          renderApp`
             <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
             <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></header>
             <main class="container-sm" style="padding-top:3rem;text-align:center;">
@@ -26,7 +26,7 @@
 
         const existing = data.standup || {};
         const isFirst = data.is_first_standup;
-        document.getElementById('app').innerHTML = `
+        renderApp`
           <header class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a>
           <div style="display:flex;align-items:center;gap:1rem;"><span style="font-size:.875rem;color:var(--ink-soft);">${escapeHtml(user.name||user.email)}</span>
           <a href="/project/${projectId}" class="btn-ghost" style="font-size:.875rem;padding:.5rem 1rem;">Back</a></div></header>
@@ -52,7 +52,7 @@
             .catch(err => toast(err.message, true));
         });
       }).catch(err => {
-        document.getElementById('app').innerHTML = `<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);">${escapeHtml(err.message)}</p></div></main>`;
+        renderApp`<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);">${escapeHtml(err.message)}</p></div></main>`;
       });
     });
   </script>

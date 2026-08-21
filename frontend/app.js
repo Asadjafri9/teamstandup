@@ -34,6 +34,17 @@ function getUser() {
   return apiJSON('/api/me').catch(function() { return null; });
 }
 
+function renderApp(strings, ...values) {
+  let html = strings[0];
+  for (var i = 0; i < values.length; i++) {
+    html += values[i];
+    html += strings[i + 1];
+  }
+  const app = document.getElementById('app');
+  app.innerHTML = html;
+  app.classList.remove('loading');
+}
+
 function requireAuth(callback) {
   getUser().then(function(user) {
     if (!user) {

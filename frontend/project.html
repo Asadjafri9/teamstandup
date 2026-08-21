@@ -22,7 +22,7 @@
         const submittedCount = status.filter(m => m.submitted).length;
         const totalMembers = status.length;
 
-        document.getElementById('app').innerHTML = `
+        renderApp`
           <header class="nav-header">
             <a href="/dashboard" class="nav-logo"><img src="/logo.png" alt="StandupBot"> StandupBot</a>
             <div style="display:flex;align-items:center;gap:1rem;">
@@ -83,7 +83,7 @@
           </main>
         `;
       }).catch(err => {
-        document.getElementById('app').innerHTML = `<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);font-weight:500;">${escapeHtml(err.message)}</p></div></main>`;
+        renderApp`<div class="nav-header"><a href="/dashboard" class="nav-logo"><img src="/logo.png"> StandupBot</a></div><main class="container" style="padding-top:3rem;"><div class="box" style="padding:1.5rem;border-color:var(--destructive);background:#fee2e2;"><p style="color:var(--destructive);font-weight:500;">${escapeHtml(err.message)}</p></div></main>`;
       });
     });
 

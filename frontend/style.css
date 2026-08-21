@@ -402,14 +402,22 @@ select.form-input {
   color: #92400e;
 }
 
-/* Loading */
-.loading {
+#app {
+  display: block;
+  min-height: 100vh;
+}
+
+#app.loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   flex-direction: column;
   gap: 1rem;
+}
+
+#app.loading > * {
+  width: 100%;
+  align-self: stretch;
 }
 
 .loading-dot {
