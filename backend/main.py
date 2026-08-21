@@ -75,22 +75,12 @@ def get_me(request: Request):
 
 @app.get("/api/health")
 def health():
-    import os
-    frontend_dir = os.path.join(os.path.dirname(__file__), "..", "dist")
-    client_dir = os.path.join(frontend_dir, "client")
-    return {
-        "ok": True,
-        "frontend_dir_exists": os.path.isdir(frontend_dir),
-        "client_dir_exists": os.path.isdir(client_dir),
-        "frontend_dir_contents": os.listdir(frontend_dir) if os.path.isdir(frontend_dir) else [],
-        "client_dir_contents": os.listdir(client_dir) if os.path.isdir(client_dir) else [],
-        "app_dir_contents": os.listdir(os.path.join(os.path.dirname(__file__), ".."))[:20],
-    }
+    return {"ok": True}
 
 
 # Serve frontend static files (assets, favicon, etc.)
 if os.path.isdir(frontend_dir):
-    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
 
 # Catch-all: serve index.html for SPA routing (must be after all API routes)
 from fastapi.responses import FileResponse
