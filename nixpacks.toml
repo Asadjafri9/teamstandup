@@ -14,4 +14,4 @@ cmds = [
 cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+cmd = "ls -la /app/dist/ 2>/dev/null; ls -la /app/dist/client/ 2>/dev/null; ls -la /app/ | head -20; cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
