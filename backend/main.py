@@ -35,8 +35,6 @@ app.include_router(members_global_router)
 app.include_router(standups_router)
 app.include_router(briefs_router)
 
-frontend_dir = os.path.join(os.path.dirname(__file__), "..", "dist", "client")
-
 
 @app.get("/api/pending-invites")
 def get_pending_invites(request: Request):
@@ -78,30 +76,6 @@ def health():
     return {"ok": True}
 
 
-# Serve frontend static files (assets, favicon, etc.)
-if os.path.isdir(frontend_dir):
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
-
-# Catch-all: serve index.html for SPA routing (must be after all API routes)
-from fastapi.responses import FileResponse
-
-@app.get("/{full_path:path}")
-def serve_frontend(full_path: str):
-    if full_path.startswith("api/"):
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Not found")
-    # Try to serve a specific static file first
-    file_path = os.path.join(frontend_dir, full_path)
-    if full_path and os.path.isfile(file_path):
-        return FileResponse(file_path)
-    # Fall back to index.html for SPA routing
-    index = os.path.join(frontend_dir, "index.html")
-    if os.path.isfile(index):
-        return FileResponse(index)
-    from fastapi import HTTPException
-    raise HTTPException(status_code=404, detail="Frontend not built")
-
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
