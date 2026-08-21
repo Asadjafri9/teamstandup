@@ -77,9 +77,7 @@ def health():
     return {"ok": True}
 
 
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
-if not os.path.isdir(FRONTEND_DIR):
-    FRONTEND_DIR = "/app/frontend"
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend"))
 
 # Serve static assets (logo, favicon, etc.)
 if os.path.isdir(FRONTEND_DIR):
