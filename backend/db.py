@@ -52,10 +52,14 @@ def init_db():
         conn = sqlite3.connect(str(DB_PATH))
         conn.row_factory = sqlite3.Row
     
-    # Use %s for PostgreSQL, ? for SQLite
-    placeholder = "%s" if USE_POSTGRES else "?"
+    # For PostgreSQL, use cursor; for SQLite, use conn directly
+    if USE_POSTGRES:
+        cur = conn.cursor()
+        exec = cur.execute
+    else:
+        exec = conn.execute
     
-    conn.execute(
+    exec(
         f"""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -75,7 +79,7 @@ def init_db():
         """
     )
     
-    conn.execute(
+    exec(
         """
         CREATE TABLE IF NOT EXISTS projects (
             id TEXT PRIMARY KEY,
@@ -99,7 +103,7 @@ def init_db():
         """
     )
     
-    conn.execute(
+    exec(
         """
         CREATE TABLE IF NOT EXISTS project_members (
             id SERIAL PRIMARY KEY,
@@ -131,7 +135,7 @@ def init_db():
         """
     )
     
-    conn.execute(
+    exec(
         """
         CREATE TABLE IF NOT EXISTS standups (
             id SERIAL PRIMARY KEY,
@@ -159,7 +163,7 @@ def init_db():
         """
     )
     
-    conn.execute(
+    exec(
         """
         CREATE TABLE IF NOT EXISTS briefs (
             id SERIAL PRIMARY KEY,
@@ -182,6 +186,9 @@ def init_db():
         )
         """
     )
+    
+    if USE_POSTGRES:
+        cur.close()
     
     conn.commit()
     conn.close()
