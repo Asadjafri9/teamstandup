@@ -3,7 +3,7 @@ nixPkgs = ["python311Full", "nodejs_20", "wget"]
 
 [phases.install]
 cmds = [
-  "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 && python3 -m pip install -r backend/requirements.txt",
+  "wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && python3 -m pip install --break-system-packages -r backend/requirements.txt",
   "npm install",
   "npm run build"
 ]
