@@ -24,3 +24,4 @@ node server.mjs
 
 # If Node exits, kill the backend too
 kill $API_PID 2>/dev/null
+# trigger redeploy
