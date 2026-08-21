@@ -1,6 +1,6 @@
 import string
 import random
-from datetime import date, datetime
+from datetime import date, datetime, time as dtime
 from fastapi import APIRouter, Depends, HTTPException
 from db import get_db_connection, PLACEHOLDER, USE_POSTGRES
 from auth import require_user
@@ -30,7 +30,7 @@ def create_project(data: ProjectCreate, user=Depends(require_user)):
         db.commit()
         project = db.execute(f"SELECT * FROM projects WHERE id = {PLACEHOLDER}", (slug,)).fetchone()
         result = {**dict(project), "role": "Project Leader", "status": "active", "today_status": "standup_due"}
-        if isinstance(result.get("standup_closes_at"), datetime.time):
+        if isinstance(result.get("standup_closes_at"), dtime):
             result["standup_closes_at"] = result["standup_closes_at"].strftime("%H:%M")
         return result
     finally:
@@ -56,7 +56,13 @@ def list_projects(user=Depends(require_user)):
         """,
             (date.today(), date.today(), user["id"]),
         ).fetchall()
-        return [dict(r) for r in rows]
+        result = []
+        for r in rows:
+            d = dict(r)
+            if isinstance(d.get("standup_closes_at"), dtime):
+                d["standup_closes_at"] = d["standup_closes_at"].strftime("%H:%M")
+            result.append(d)
+        return result
     finally:
         db.close()
 
@@ -78,6 +84,9 @@ def get_project(project_id: str, user=Depends(require_user)):
             f"SELECT pm.*, u.name, u.email, u.avatar_url FROM project_members pm LEFT JOIN users u ON pm.user_id = u.id WHERE pm.project_id = {PLACEHOLDER} AND pm.status != 'removed'",
             (project_id,),
         ).fetchall()
-        return {**dict(project), "members": [dict(m) for m in members], "current_member": dict(member)}
+        result = {**dict(project), "members": [dict(m) for m in members], "current_member": dict(member)}
+        if isinstance(result.get("standup_closes_at"), dtime):
+            result["standup_closes_at"] = result["standup_closes_at"].strftime("%H:%M")
+        return result
     finally:
         db.close()
