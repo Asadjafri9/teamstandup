@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join, extname, normalize } from "node:path";
 import ssrServer from "./dist/server/server.js";
 
@@ -7,6 +7,19 @@ const PORT = process.env.PORT || 8080;
 const API_PORT = 8001;
 const API_BASE = `http://localhost:${API_PORT}`;
 const STATIC_DIR = join(process.cwd(), "dist", "client");
+
+// Find the CSS file at startup
+let cssFilePath = "";
+try {
+  const files = await readdir(join(STATIC_DIR, "assets"));
+  const cssFile = files.find((f) => f.endsWith(".css"));
+  if (cssFile) {
+    cssFilePath = `/assets/${cssFile}`;
+    console.log(`Found CSS: ${cssFilePath}`);
+  }
+} catch {
+  console.log("No CSS file found in dist/client/assets");
+}
 
 const MIME_TYPES = {
   ".js": "application/javascript",
@@ -127,7 +140,18 @@ const server = createServer(async (req, res) => {
     delete responseHeaders["transfer-encoding"];
     delete responseHeaders["content-encoding"];
 
-    const responseBody = Buffer.from(await response.arrayBuffer());
+    let responseBody = Buffer.from(await response.arrayBuffer());
+
+    // Replace VITE_CSS_URL placeholder with actual CSS path
+    if (cssFilePath) {
+      responseBody = Buffer.from(
+        responseBody.toString().replace(
+          /__VITE_CSS_URL__[a-f0-9]+__/g,
+          cssFilePath
+        )
+      );
+    }
+
     res.writeHead(response.status, responseHeaders);
     res.end(responseBody);
   } catch (err) {
