@@ -1,9 +1,14 @@
 import secrets
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from db import get_db_connection, PLACEHOLDER
+from pydantic import BaseModel
+from db import get_db_connection, PLACEHOLDER, USE_POSTGRES
 from auth import require_user
 from models import MemberInvite, InviteLinkCreate
+
+
+class JoinByCode(BaseModel):
+    code: str
 
 router = APIRouter(prefix="/api/projects/{project_id}", tags=["members"])
 
@@ -94,6 +99,44 @@ def accept_invite(token: str, user=Depends(require_user)):
         )
         db.commit()
         return {"ok": True, "project_id": invite["project_id"]}
+    finally:
+        db.close()
+
+
+@router_global.post("/join-by-code")
+def join_by_code(data: JoinByCode, user=Depends(require_user)):
+    db = get_db_connection()
+    try:
+        project = db.execute(
+            f"SELECT * FROM projects WHERE id = {PLACEHOLDER}",
+            (data.code.strip(),),
+        ).fetchone()
+        if not project:
+            raise HTTPException(404, "Invalid project code")
+
+        existing = db.execute(
+            f"SELECT * FROM project_members WHERE project_id = {PLACEHOLDER} AND user_id = {PLACEHOLDER}",
+            (project["id"], user["id"]),
+        ).fetchone()
+
+        if existing:
+            if existing["status"] == "active":
+                raise HTTPException(400, "You are already a member of this project")
+            if existing["status"] == "invited":
+                db.execute(
+                    f"UPDATE project_members SET status = 'active', joined_at = {PLACEHOLDER} WHERE id = {PLACEHOLDER}",
+                    (datetime.utcnow().isoformat(), existing["id"]),
+                )
+                db.commit()
+                return {"ok": True, "project_id": project["id"], "project_name": project["name"]}
+            raise HTTPException(400, "You cannot join this project")
+
+        db.execute(
+            f"INSERT INTO project_members (project_id, user_id, role, status, invite_type, joined_at, is_first_standup) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
+            (project["id"], user["id"], "Member", "active", "code", datetime.utcnow().isoformat(), False if USE_POSTGRES else 0),
+        )
+        db.commit()
+        return {"ok": True, "project_id": project["id"], "project_name": project["name"]}
     finally:
         db.close()
 

@@ -26,9 +26,28 @@
             <a href="/new" class="btn-primary">+ New project</a>
           </div>
           <div id="invites-section"></div>
+          <div class="box" style="padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+              <h3 style="font-size:1.125rem;color:var(--ink);margin-bottom:.25rem;">Join a project</h3>
+              <p style="font-size:.875rem;color:var(--ink-soft);">Enter the 6-character project code shared by your team leader.</p>
+            </div>
+            <form id="join-code-form" style="display:flex;gap:.75rem;align-items:center;">
+              <input class="form-input" type="text" name="code" required placeholder="e.g. a3x9k2" maxlength="6" style="width:140px;text-transform:lowercase;font-family:var(--font-mono);letter-spacing:.1em;">
+              <button type="submit" class="btn-primary">Join</button>
+            </form>
+          </div>
           <div id="projects-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;"></div>
         </main>
       `;
+
+      document.getElementById('join-code-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const code = new FormData(e.target).get('code').trim();
+        if (!code) return;
+        apiJSON('/api/join-by-code', { method: 'POST', body: JSON.stringify({ code: code }) })
+          .then(r => { toast('Joined "' + r.project_name + '"!'); setTimeout(() => redirect('/project/' + r.project_id), 800); })
+          .catch(err => toast(err.message, true));
+      });
 
       Promise.all([
         apiJSON('/api/projects'),
