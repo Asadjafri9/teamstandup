@@ -16,5 +16,17 @@ export default defineConfig({
     build: {
       cssCodeSplit: false,
     },
+    plugins: [
+      {
+        name: "fix-empty-css-chunk",
+        enforce: "post",
+        renderChunk(code, chunk) {
+          if (code === "" ) {
+            return "/* empty */";
+          }
+          return null;
+        },
+      },
+    ],
   },
 });
