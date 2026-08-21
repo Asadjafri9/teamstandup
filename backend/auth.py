@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature
-from db import get_db, get_db_connection, USE_POSTGRES
+from db import get_db, get_db_connection, USE_POSTGRES, PLACEHOLDER
 
 router = APIRouter()
 
@@ -91,11 +91,18 @@ async def google_callback(code: str, request: Request):
                 (user_info.get("name", ""), user_info.get("picture", ""), user_id),
             )
         else:
-            cursor = conn.execute(
-                f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
-                (user_info["email"], user_info.get("name", ""), user_info.get("picture", "")),
-            )
-            user_id = cursor.lastrowid
+            if USE_POSTGRES:
+                cursor = conn.execute(
+                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}) RETURNING id",
+                    (user_info["email"], user_info.get("name", ""), user_info.get("picture", "")),
+                )
+                user_id = cursor.fetchone()["id"]
+            else:
+                cursor = conn.execute(
+                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
+                    (user_info["email"], user_info.get("name", ""), user_info.get("picture", "")),
+                )
+                user_id = cursor.lastrowid
 
             conn.execute(
                 f"UPDATE project_members SET user_id = {PLACEHOLDER} WHERE email = {PLACEHOLDER} AND user_id IS NULL",
@@ -109,12 +116,12 @@ async def google_callback(code: str, request: Request):
     token = serializer.dumps(user_id)
     response = RedirectResponse(url=f"{APP_URL}/dashboard")
     response.set_cookie(
-        COOKIE_NAME, 
-        token, 
-        max_age=COOKIE_MAX_AGE, 
-        httponly=True, 
+        COOKIE_NAME,
+        token,
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
         samesite="lax",
-        domain=os.getenv("COOKIE_DOMAIN", "localhost")
+        domain=os.getenv("COOKIE_DOMAIN", None),
     )
     return response
 
@@ -129,11 +136,18 @@ def demo_login():
         if existing:
             user_id = existing["id"]
         else:
-            cursor = conn.execute(
-                f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
-                ("demo@standupbot.dev", "Demo User", ""),
-            )
-            user_id = cursor.lastrowid
+            if USE_POSTGRES:
+                cursor = conn.execute(
+                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}) RETURNING id",
+                    ("demo@standupbot.dev", "Demo User", ""),
+                )
+                user_id = cursor.fetchone()["id"]
+            else:
+                cursor = conn.execute(
+                    f"INSERT INTO users (email, name, avatar_url) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
+                    ("demo@standupbot.dev", "Demo User", ""),
+                )
+                user_id = cursor.lastrowid
             conn.commit()
     finally:
         conn.close()
@@ -146,7 +160,7 @@ def demo_login():
         max_age=COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        domain=os.getenv("COOKIE_DOMAIN", "localhost"),
+        domain=os.getenv("COOKIE_DOMAIN", None),
     )
     return response
 
@@ -155,7 +169,7 @@ def demo_login():
 def logout(response: Response):
     response.delete_cookie(
         COOKIE_NAME,
-        domain=os.getenv("COOKIE_DOMAIN", "localhost"),
+        domain=os.getenv("COOKIE_DOMAIN", None),
         httponly=True,
         samesite="lax"
     )

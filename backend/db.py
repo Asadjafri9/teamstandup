@@ -13,6 +13,31 @@ if USE_POSTGRES:
 else:
     DB_PATH = Path(__file__).parent / "standupbot.db"
 
+
+class PostgresConnectionWrapper:
+    """Wraps a psycopg2 connection so .execute() works like sqlite3."""
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, query, params=None):
+        cur = self._conn.cursor()
+        cur.execute(query, params)
+        return cur
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.close()
+
+    @property
+    def cursor_factory(self):
+        return self._conn.cursor_factory
+
+    @cursor_factory.setter
+    def cursor_factory(self, value):
+        self._conn.cursor_factory = value
+
 PLACEHOLDER = "%s" if USE_POSTGRES else "?"
 
 
@@ -20,6 +45,7 @@ def get_db():
     if USE_POSTGRES:
         conn = psycopg2.connect(DATABASE_URL)
         conn.cursor_factory = RealDictCursor
+        conn = PostgresConnectionWrapper(conn)
     else:
         conn = sqlite3.connect(str(DB_PATH))
         conn.row_factory = sqlite3.Row
@@ -36,6 +62,7 @@ def get_db_connection():
     if USE_POSTGRES:
         conn = psycopg2.connect(DATABASE_URL)
         conn.cursor_factory = RealDictCursor
+        return PostgresConnectionWrapper(conn)
     else:
         conn = sqlite3.connect(str(DB_PATH))
         conn.row_factory = sqlite3.Row
@@ -46,16 +73,18 @@ def get_db_connection():
 
 def init_db():
     if USE_POSTGRES:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.cursor_factory = RealDictCursor
+        raw = psycopg2.connect(DATABASE_URL)
+        raw.cursor_factory = RealDictCursor
+        conn = PostgresConnectionWrapper(raw)
     else:
         conn = sqlite3.connect(str(DB_PATH))
         conn.row_factory = sqlite3.Row
-    
+
     # For PostgreSQL, use cursor; for SQLite, use conn directly
     if USE_POSTGRES:
-        cur = conn.cursor()
-        exec = cur.execute
+        cur = conn.execute  # wrapper returns a cursor
+        def exec(q, p=None):
+            return conn.execute(q, p)
     else:
         exec = conn.execute
     
@@ -188,7 +217,7 @@ def init_db():
     )
     
     if USE_POSTGRES:
-        cur.close()
+        pass  # cursors are auto-managed by wrapper
     
     conn.commit()
     conn.close()
