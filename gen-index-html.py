@@ -4,6 +4,17 @@ import glob
 client_dir = "dist/client"
 assets_dir = os.path.join(client_dir, "assets")
 
+# Patch client JS: replace hydrateRoot with createRoot for client-side rendering
+# (since we're not running the SSR server, hydration will fail on empty #root)
+for js_file in glob.glob(os.path.join(assets_dir, "*.js")):
+    with open(js_file, "r") as f:
+        content = f.read()
+    if "hydrateRoot" in content:
+        content = content.replace("hydrateRoot", "createRoot")
+        with open(js_file, "w") as f:
+            f.write(content)
+        print(f"Patched hydrateRoot -> createRoot in {os.path.basename(js_file)}")
+
 js_files = sorted(glob.glob(os.path.join(assets_dir, "index-*.js")))
 css_files = sorted(glob.glob(os.path.join(assets_dir, "styles-*.css")))
 
