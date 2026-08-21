@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
-from db import get_db_connection, PLACEHOLDER
+from db import get_db_connection, PLACEHOLDER, USE_POSTGRES
 from auth import require_user
 from models import StandupSubmit
 
@@ -78,8 +78,8 @@ def submit_standup(project_id: str, data: StandupSubmit, user=Depends(require_us
             )
             if member["is_first_standup"]:
                 db.execute(
-                    f"UPDATE project_members SET is_first_standup = 0 WHERE id = {PLACEHOLDER}",
-                    (member["id"],),
+                    f"UPDATE project_members SET is_first_standup = {PLACEHOLDER} WHERE id = {PLACEHOLDER}",
+                    (False if USE_POSTGRES else 0, member["id"]),
                 )
 
         db.commit()

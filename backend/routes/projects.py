@@ -2,7 +2,7 @@ import string
 import random
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException
-from db import get_db_connection, PLACEHOLDER
+from db import get_db_connection, PLACEHOLDER, USE_POSTGRES
 from auth import require_user
 from models import ProjectCreate, ProjectResponse
 
@@ -25,7 +25,7 @@ def create_project(data: ProjectCreate, user=Depends(require_user)):
         )
         db.execute(
             f"INSERT INTO project_members (project_id, user_id, role, status, invite_type, joined_at, is_first_standup) VALUES ({PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER}, {PLACEHOLDER})",
-            (slug, user["id"], "Project Leader", "active", "email", datetime.utcnow().isoformat(), 0),
+            (slug, user["id"], "Project Leader", "active", "email", datetime.utcnow().isoformat(), False if USE_POSTGRES else 0),
         )
         db.commit()
         project = db.execute(f"SELECT * FROM projects WHERE id = {PLACEHOLDER}", (slug,)).fetchone()
