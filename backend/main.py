@@ -75,7 +75,17 @@ def get_me(request: Request):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True}
+    import os
+    frontend_dir = os.path.join(os.path.dirname(__file__), "..", "dist")
+    client_dir = os.path.join(frontend_dir, "client")
+    return {
+        "ok": True,
+        "frontend_dir_exists": os.path.isdir(frontend_dir),
+        "client_dir_exists": os.path.isdir(client_dir),
+        "frontend_dir_contents": os.listdir(frontend_dir) if os.path.isdir(frontend_dir) else [],
+        "client_dir_contents": os.listdir(client_dir) if os.path.isdir(client_dir) else [],
+        "app_dir_contents": os.listdir(os.path.join(os.path.dirname(__file__), ".."))[:20],
+    }
 
 
 # Serve frontend static files (assets, favicon, etc.)
