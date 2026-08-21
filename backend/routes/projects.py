@@ -29,7 +29,10 @@ def create_project(data: ProjectCreate, user=Depends(require_user)):
         )
         db.commit()
         project = db.execute(f"SELECT * FROM projects WHERE id = {PLACEHOLDER}", (slug,)).fetchone()
-        return {**dict(project), "role": "Project Leader", "status": "active", "today_status": "standup_due"}
+        result = {**dict(project), "role": "Project Leader", "status": "active", "today_status": "standup_due"}
+        if isinstance(result.get("standup_closes_at"), datetime.time):
+            result["standup_closes_at"] = result["standup_closes_at"].strftime("%H:%M")
+        return result
     finally:
         db.close()
 
