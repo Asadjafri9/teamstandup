@@ -1,9 +1,61 @@
 import { createServer } from "node:http";
+import { readFile, stat } from "node:fs/promises";
+import { join, extname, normalize } from "node:path";
 import ssrServer from "./dist/server/server.js";
 
 const PORT = process.env.PORT || 8080;
 const API_PORT = 8001;
 const API_BASE = `http://localhost:${API_PORT}`;
+const STATIC_DIR = join(process.cwd(), "dist", "client");
+
+const MIME_TYPES = {
+  ".js": "application/javascript",
+  ".css": "text/css",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".json": "application/json",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".eot": "application/vnd.ms-fontobject",
+  ".otf": "font/otf",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".wasm": "application/wasm",
+};
+
+async function serveStatic(req, res) {
+  const pathname = normalize(new URL(req.url, `http://localhost`).pathname);
+  const filePath = join(STATIC_DIR, pathname);
+
+  // Prevent path traversal
+  if (!filePath.startsWith(STATIC_DIR)) {
+    return false;
+  }
+
+  try {
+    const stats = await stat(filePath);
+    if (stats.isFile()) {
+      const data = await readFile(filePath);
+      const ext = extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || "application/octet-stream";
+      res.writeHead(200, {
+        "content-type": contentType,
+        "content-length": stats.size,
+        "cache-control": "public, max-age=31536000, immutable",
+      });
+      res.end(data);
+      return true;
+    }
+  } catch {
+    // File not found, fall through to SSR
+  }
+  return false;
+}
 
 const server = createServer(async (req, res) => {
   // Proxy /api requests to the Python backend
@@ -25,7 +77,6 @@ const server = createServer(async (req, res) => {
       });
       
       const apiHeaders = Object.fromEntries(apiRes.headers.entries());
-      // Remove transfer-encoding since we'll set content-length
       delete apiHeaders["transfer-encoding"];
       delete apiHeaders["content-encoding"];
       
@@ -37,6 +88,11 @@ const server = createServer(async (req, res) => {
       res.writeHead(502, { "content-type": "application/json" });
       res.end(JSON.stringify({ error: "Backend unavailable" }));
     }
+    return;
+  }
+
+  // Try to serve static files first (CSS, JS, images, etc.)
+  if (await serveStatic(req, res)) {
     return;
   }
 
