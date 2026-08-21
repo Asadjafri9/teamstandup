@@ -1,0 +1,2 @@
+# Prevent Railway from auto-detecting Node.js and running its own build
+# We handle everything via nixpacks.toml
