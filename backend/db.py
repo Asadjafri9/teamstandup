@@ -156,14 +156,21 @@ def init_db():
             role TEXT NOT NULL DEFAULT 'Member',
             status TEXT NOT NULL CHECK(status IN ('invited','active','declined','removed')) DEFAULT 'invited',
             invite_token TEXT UNIQUE,
-            invite_type TEXT CHECK(invite_type IN ('email','link')),
+            invite_type TEXT CHECK(invite_type IN ('email','link','code')),
             joined_at DATETIME,
             is_first_standup BOOLEAN DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """
     )
-    
+
+    if USE_POSTGRES:
+        try:
+            exec("ALTER TABLE project_members DROP CONSTRAINT IF EXISTS project_members_invite_type_check")
+            exec("ALTER TABLE project_members ADD CONSTRAINT project_members_invite_type_check CHECK(invite_type IN ('email','link','code'))")
+        except Exception:
+            pass
+
     exec(
         """
         CREATE TABLE IF NOT EXISTS standups (
